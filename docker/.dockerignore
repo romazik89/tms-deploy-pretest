@@ -1,0 +1,13 @@
+# Исключаем из контекста сборки всё лишнее
+.git
+.gitignore
+README.md
+docs/
+native/
+ansible/
+*.tar.gz
+*.zip
+*.log
+.env
+appsettings.json
+secrets/
