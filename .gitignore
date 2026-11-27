@@ -1,0 +1,40 @@
+# Секреты и конфиги
+.env
+*.env
+appsettings.json
+appsettings.*.json
+!appsettings.example.json
+*.key
+*.pem
+*.crt
+*.pfx
+secrets/
+
+# Архивы и артефакты
+*.tar.gz
+*.zip
+*.7z
+*.bkp
+*.bak
+
+# Логи и временные файлы
+*.log
+logs/
+tmp/
+.tmp/
+
+# Python / Ansible
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.retry
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
