@@ -20,3 +20,15 @@
 1. Установить коллекцию:
    ```bash
    ansible-galaxy collection install community.docker
+   
+2. Проверить инвентарь:
+bash
+ansible-inventory -i inventory/local.ini --list
+
+4. Запустить развёртывание:
+bash
+ansible-playbook -i inventory/local.ini site.yml
+
+4. Откат (с предыдущим тегом):
+bash
+ansible-playbook -i inventory/local.ini rollback.yml -e "tms_tag=2026_6_1_12000"
