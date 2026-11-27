@@ -1,0 +1,48 @@
+---
+- name: Откат TMS на предыдущую версию (контейнерный способ)
+  hosts: local
+  become: true
+  vars:
+    tms_image: "tms-web"
+    tms_tag: "2026_6_1_12000"   # предыдущая версия (переопределяется через -e)
+    tms_port: 5000
+    tms_data_dir: "/data/tms"
+
+  tasks:
+    - name: Проверить, что образ предыдущей версии существует
+      community.docker.docker_image_info:
+        name: "{{ tms_image }}:{{ tms_tag }}"
+      register: image_info
+      failed_when: image_info.images | length == 0
+
+    - name: Остановить и удалить текущий контейнер
+      community.docker.docker_container:
+        name: tms-web
+        state: absent
+        force_kill: true
+
+    - name: Запустить контейнер с предыдущим образом
+      community.docker.docker_container:
+        name: tms-web
+        image: "{{ tms_image }}:{{ tms_tag }}"
+        state: started
+        restart_policy: unless-stopped
+        ports:
+          - "{{ tms_port }}:5000"
+        volumes:
+          - "{{ tms_data_dir }}:/app/data"
+
+    - name: Health-check после отката
+      ansible.builtin.uri:
+        url: "http://localhost:{{ tms_port }}/"
+        method: GET
+        status_code: 200
+        timeout: 10
+      register: health_result
+      retries: 12
+      delay: 5
+      until: health_result.status == 200
+
+    - name: Вывести результат отката
+      ansible.builtin.debug:
+        msg: "Откат на {{ tms_tag }} выполнен, TMS отвечает (попыток: {{ health_result.attempts | default('n/a') }})"
