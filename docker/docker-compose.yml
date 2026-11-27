@@ -1,0 +1,34 @@
+# УЧЕБНЫЙ ПРИМЕР для локального запуска.
+version: "3.9"
+
+services:
+  tms:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tms-web:2026_6_8_38158
+    container_name: tms-web
+    ports:
+      - "5000:5000"
+    volumes:
+      - /data/tms:/app/data
+      # Для TLS (если нужно):
+      # - /etc/ssl/certs/tms.crt:/app/certs/tms.crt:ro
+      # - /etc/ssl/private/tms.key:/app/certs/tms.key:ro
+    environment:
+      - ASPNETCORE_URLS=http://+:5000
+      # Строка подключения к БД (пример, не коммитить реальные значения):
+      # - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=tms;Username=tms;Password=CHANGE_ME
+    restart: unless-stopped
+
+  # Опционально: PostgreSQL для локального теста
+  # db:
+  #   image: postgres:15
+  #   container_name: tms-db
+  #   environment:
+  #     POSTGRES_DB: tms
+  #     POSTGRES_USER: tms
+  #     POSTGRES_PASSWORD: CHANGE_ME
+  #   volumes:
+  #     - /data/tms-db:/var/lib/postgresql/data
+  #   restart: unless-stopped
