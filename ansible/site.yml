@@ -1,0 +1,59 @@
+---
+- name: Развертывание TMS (контейнерный способ)
+  hosts: local
+  become: true
+  vars:
+    tms_image: "tms-web"
+    tms_tag: "2026_6_8_38158"
+    tms_port: 5000
+    tms_data_dir: "/data/tms"
+
+  tasks:
+    - name: Проверить, что Docker установлен
+      ansible.builtin.command: docker --version
+      register: docker_version
+      changed_when: false
+      failed_when: docker_version.rc != 0
+
+    - name: Создать каталог для данных TMS
+      ansible.builtin.file:
+        path: "{{ tms_data_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Собрать образ TMS из Dockerfile
+      community.docker.docker_image:
+        name: "{{ tms_image }}"
+        tag: "{{ tms_tag }}"
+        source: build
+        build:
+          path: ../docker
+          dockerfile: Dockerfile
+        state: present
+
+    - name: Запустить контейнер TMS
+      community.docker.docker_container:
+        name: tms-web
+        image: "{{ tms_image }}:{{ tms_tag }}"
+        state: started
+        restart_policy: unless-stopped
+        ports:
+          - "{{ tms_port }}:5000"
+        volumes:
+          - "{{ tms_data_dir }}:/app/data"
+      register: container_result
+
+    - name: Health-check (проверка, что TMS отвечает)
+      ansible.builtin.uri:
+        url: "http://localhost:{{ tms_port }}/"
+        method: GET
+        status_code: 200
+        timeout: 10
+      register: health_result
+      retries: 12
+      delay: 5
+      until: health_result.status == 200
+
+    - name: Вывести результат
+      ansible.builtin.debug:
+        msg: "TMS запущена и отвечает (попыток: {{ health_result.attempts | default('n/a') }})"
